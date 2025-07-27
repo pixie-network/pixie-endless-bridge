@@ -1,0 +1,15 @@
+[package]
+name = "pixie"
+version = "1.0.0"
+authors = []
+
+[addresses]
+pixie = "_"
+
+[dev-addresses]
+
+[dependencies]
+EndlessFramework = {git = "https://github.com/endless-labs/endless-move-framework", rev = "main", subdir = "endless-framework"}
+EndlessToken = {git = "https://github.com/endless-labs/endless-move-framework", rev = "main", subdir = "endless-token"}
+
+[dev-dependencies]

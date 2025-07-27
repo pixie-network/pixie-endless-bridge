@@ -1,0 +1,20 @@
+{
+  "name": "replay",
+  "version": "1.0.0",
+  "description": "",
+  "license": "ISC",
+  "author": "",
+  "type": "module",
+  "main": "CrossChainRelay.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "@endlesslab/endless-ts-sdk": "^1.0.5",
+    "better-sqlite3": "^12.2.0",
+    "bs58": "^6.0.0",
+    "buffer": "^6.0.3",
+    "dotenv": "^17.2.1",
+    "ethers": "^6.15.0"
+  }
+}
