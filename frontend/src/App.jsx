@@ -117,7 +117,7 @@ const PixieBridge = () => {
             setIsWalletConnected(true);
 
             const balanceWei = await getEPIXBalance(accountAddress);
-            const balanceEth = (balanceWei/1_000_000_000).toFixed(5);
+            const balanceEth = parseFloat(ethers.formatEther(balanceWei)).toFixed(5);
             setBalance(balanceEth);
         }
     }
@@ -324,7 +324,7 @@ const PixieBridge = () => {
             payload: {
                 function: `${Package_Address}::token::lock_tokens_to_pixie`,
                 functionArguments: [
-                    BigInt(Number(sendAmount) * 1_000_000_000),
+                    ethers.parseEther(sendAmount),
                     receiveAddress
                 ],
                 abi,

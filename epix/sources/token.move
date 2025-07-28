@@ -65,7 +65,7 @@ module pixie::token {
             option::none(),
             utf8(b"PIXIE"),
             utf8(ASSET_SYMBOL),
-            9,
+            18,
             string::utf8(b"https://images.pixie.xyz/logos/pix.png"),
             utf8(b"https://pixie.xyz/"),
         );
@@ -159,7 +159,7 @@ module pixie::token {
     }
 
     inline fun conevert_from_wei(amount: u256): u256 {
-        amount / 1_000_000_000 // from wei to 9-decimals
+        amount // 1_000_000_000 // from wei to 9-decimals
     }
 
     // Validator Signs to Mint Tokens (Returning from PixieChain)

@@ -18,7 +18,7 @@ async function startProcessingPendingLocks(intervalMs = 5000) {
                 const executedHash = await callSignMintTokens({...lockDetail});
 
                 if (executedHash !== "") {
-                    await callMarkAsExecuted({lockHash: pending.hash, executedHash});
+                    await callMarkAsExecuted({lockHash: pending.hash, executedByTx: executedHash});
                     markAsProcessed(pending.hash);
                 }
             }

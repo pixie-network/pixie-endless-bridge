@@ -2,7 +2,7 @@ import { getLastProcessedVersion} from './db.js';
 import { getLatestLedger, getBridgeTx } from './endless.js';
 
 async function startPollingLockTxFromEndless(intervalMs = 1000) {
-    let ledgerVersion = getLastProcessedVersion("endless");
+    let ledgerVersion = getLastProcessedVersion("endless", 272659000);
 
     async function loop() {
         const latest = await getLatestLedger();

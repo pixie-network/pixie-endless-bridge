@@ -1,6 +1,6 @@
 export const RPC_URL = "https://http-mainnet.chain.pixie.xyz";
 export const CONTRACT_ADDRESS = "0x767b133b3680E653a7F7eBa74d2D0A43669E8f12";
-export const Package_Address = "2f26ac71ab3c863d0b0abba4ad41f587f698059afdcc8f63192a9b8b60a466f9";
+export const Package_Address = "f5637d488eb9683c951f21d31858e6b2d2b4b63bba08542cfed6d58a1450a309";
 
 // export const RPC_URL = "https://eth-sepolia.g.alchemy.com/v2/wHzjVA-l046gmCvYBNj_0";
 // export const CONTRACT_ADDRESS = "0x1aD1AFCa52ccf6E79091B4e13EB89e304e7ff0da";

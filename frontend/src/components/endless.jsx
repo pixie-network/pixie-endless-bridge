@@ -47,7 +47,7 @@ function EndlessApp() {
             payload: {
                 function: `${Package_Address}::token::lock_tokens_to_pixie`,
                 functionArguments: [
-                    BigInt(Number(valueInETH) * 1_000_000_000),
+                    BigInt(Number(valueInETH)),
                     targetAddress
                 ],
                 abi,

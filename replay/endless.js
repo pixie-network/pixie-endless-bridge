@@ -128,7 +128,7 @@ async function submitSimpleTransaction({payload}) {
         const tx = (await endless.waitForTransaction({
             transactionHash: transactionResponse.hash,
         }))
-        console.log(`transaction version: ${tx.version}`)
+        console.log(`submitSimpleTransaction transaction version: ${transactionResponse.hash}`)
 
         return transactionResponse.hash;
     } catch (error) {

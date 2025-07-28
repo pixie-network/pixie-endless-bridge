@@ -2,7 +2,7 @@ const ContractAddress = "0x767b133b3680E653a7F7eBa74d2D0A43669E8f12";
 const Rpc_Url = "https://http-mainnet.chain.pixie.xyz";
 const Chain_Id = "6626";
 const Chain_Id_Hex = "0x19e2";
-const Package_Address = "2f26ac71ab3c863d0b0abba4ad41f587f698059afdcc8f63192a9b8b60a466f9";
+const Package_Address = "f5637d488eb9683c951f21d31858e6b2d2b4b63bba08542cfed6d58a1450a309";
 
 const BridgeAbi = [
     {
