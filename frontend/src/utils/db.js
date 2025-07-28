@@ -23,7 +23,8 @@ class TxDB {
 
     async loadTxHashes() {
         const db = await this.dbPromise;
-        return await db.getAll('txStore');
+        const all = await db.getAll('txStore');
+        return all.sort((a, b) => b.timestamp.localeCompare(a.timestamp));
     }
 }
 

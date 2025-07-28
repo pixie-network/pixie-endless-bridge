@@ -1,20 +1,11 @@
-import React, {useState, useEffect} from "react";
-import {ArrowRight, ChevronDown, History, X, ExternalLink} from "lucide-react";
+import React, {useEffect, useState} from "react";
+import {ArrowRight, ChevronDown, ExternalLink, History, RefreshCw, X} from "lucide-react";
 import {ethers} from "ethers";
-import {BridgeAbi, ContractAddress, Rpc_Url, Chain_Id, Chain_Id_Hex, Package_Address} from "./config.js";
+import {BridgeAbi, ContractAddress, Package_Address} from "./config.js";
 import {TxDB} from "./utils/db.js";
 import {convert} from "./utils/utils.js";
-import {
-    Network,
-    parseTypeTag,
-    TypeTagU256,
-    EndlessConfig,
-    Endless,
-} from '@endlesslab/endless-ts-sdk';
-import {
-    EndlessJsSdk,
-    UserResponseStatus,
-} from '@endlesslab/endless-web3-sdk';
+import {Endless, EndlessConfig, Network, parseTypeTag, TypeTagU256,} from '@endlesslab/endless-ts-sdk';
+import {EndlessJsSdk, UserResponseStatus,} from '@endlesslab/endless-web3-sdk';
 
 const db = new TxDB("PixieDB");
 const endlessNetwork = Network.TESTNET;
@@ -85,7 +76,7 @@ const PixieBridge = () => {
 
     // Get chain name
     const getChainName = (chainId) => {
-        if (chainId.toString() === "6626") return "Pixie";
+        if (isPixieChain(chainId)) return "Pixie";
         else return "Endless";
     };
 
@@ -190,6 +181,31 @@ const PixieBridge = () => {
         setSendAmount(balance);
     };
 
+    const getPixieLockTransaction = async (lockHash) => {
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        const signer = await provider.getSigner();
+        try {
+            const bridgeContract = new ethers.Contract(ContractAddress, BridgeAbi, signer);
+            const txData = await bridgeContract.lockTransactions(lockHash);
+
+            return {
+                hash: lockHash,
+                from_address: txData.user,
+                amount: ethers.formatEther(txData.amount),
+                target_address: txData.endlessAddress,
+                timestamp: new Date(Number(txData.timestamp) * 1000).toLocaleString(),
+                executed: txData.executed,
+                nonce: txData.nonce,
+                executed_by_tx: txData.executedByTx,
+                chain_id: txData.chainId,
+            };
+
+        } catch (e) {
+            console.error(e);
+            return null;
+        }
+    }
+
     const getPixieTx = async (txHash) => {
         const provider = new ethers.BrowserProvider(window.ethereum);
         const signer = await provider.getSigner();
@@ -214,26 +230,9 @@ const PixieBridge = () => {
             return
         }
 
-        try {
-            const bridgeContract = new ethers.Contract(ContractAddress, BridgeAbi, signer);
-            const txData = await bridgeContract.lockTransactions(lockHash);
-
-            const result = {
-                hash: lockHash,
-                from_address: txData.user,
-                amount: ethers.formatEther(txData.amount),
-                target_address: txData.endlessAddress,
-                timestamp: new Date(Number(txData.timestamp) * 1000).toLocaleString(),
-                executed: txData.executed,
-                nonce: txData.nonce,
-                executed_by_tx: txData.executedByTx,
-                chain_id: txData.chainId,
-            };
-
+        const result = await getPixieLockTransaction(lockHash);
+        if (result) {
             await db.saveTxHash(result);
-
-        } catch (e) {
-            console.error(e);
         }
     }
 
@@ -290,22 +289,11 @@ const PixieBridge = () => {
             });
 
             if (data && data.length > 0) {
-                const item = data[0];
-
-                await db.saveTxHash({
-                    hash: lockHash,
-                    from_address: item.user,
-                    amount: ethers.formatEther(item.amount),
-                    target_address: item.pixie_address,
-                    timestamp: new Date(Number(item.timestamp) * 1000).toLocaleString(),
-                    executed: item.executed,
-                    nonce: item.nonce,
-                    executed_by_tx: item.executed_by_tx,
-                    chain_id: item.chain_id,
-                });
+                return data[0];
             }
         } catch (e) {
             console.error(e);
+            return null;
         }
     }
 
@@ -340,6 +328,20 @@ const PixieBridge = () => {
         }
     }
 
+    const saveEndlessTransaction = async (tx_hash, result) => {
+        await db.saveTxHash({
+            hash: tx_hash,
+            from_address: result.user,
+            amount: ethers.formatEther(result.amount),
+            target_address: result.pixie_address,
+            timestamp: new Date(Number(result.timestamp) * 1000).toLocaleString(),
+            executed: result.executed,
+            nonce: result.nonce,
+            executed_by_tx: result.executed_by_tx,
+            chain_id: result.chain_id,
+        });
+    }
+
     const parseEndlessEvents = async (transaction) => {
         const {events} = transaction;
 
@@ -347,7 +349,11 @@ const PixieBridge = () => {
             const {type, data} = event;
             if (/token::TokensLockedEvent/.test(type)) {
                 const {tx_hash } = data;
-                await queryEndlessLockTransactions(tx_hash);
+                const result = await queryEndlessLockTransactions(tx_hash);
+
+                if (result) {
+                    await saveEndlessTransaction(tx_hash, result);
+                }
             }
         }
     }
@@ -410,6 +416,32 @@ const PixieBridge = () => {
         const history = await db.loadTxHashes();
         setHistoryRecords(history);
         setShowHistory(true);
+    }
+
+    const refreshTransactionStatus = async (record) => {
+        const { hash, chain_id } = record;
+        if (isPixieChain(chain_id)) {
+            const result = await getPixieLockTransaction(hash);
+            await db.saveTxHash({...result});
+        } else {
+            const result = await queryEndlessLockTransactions(hash);
+            if (result) {
+                await saveEndlessTransaction(hash, result);
+            }
+        }
+        await loadAndShowHistory();
+    }
+
+    const isPixieChain = (chain_id) => {
+        return Number(chain_id) === 6626;
+    }
+
+    const formatExecutedLink = (record) => {
+        const { chain_id } = record;
+        if (isPixieChain(chain_id)) {
+            return `https://scan.endless.link/txn/${record.executed_by_tx}?network=${endlessNetwork}`;
+        }
+        return `https://scan.chain.pixie.xyz/tx/${record.executed_by_tx}`;
     }
 
     // Transaction history modal component
@@ -527,7 +559,7 @@ const PixieBridge = () => {
                                                 <td className="p-4 border-b border-gray-100">
                             <span className="inline-flex items-center gap-2">
                               <div className={`w-3 h-3 rounded-full ${
-                                  record.chain_id === 6626 ? "bg-blue-500" :
+                                  isPixieChain(record.chain_id) ? "bg-blue-500" :
                                       record.chain_id <= 223 ? "bg-yellow-500" :
                                           "bg-purple-500"
                               }`}></div>
@@ -550,12 +582,23 @@ const PixieBridge = () => {
                                                 </td>
 
                                                 <td className="p-4 border-b border-gray-100">
-                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                                record.executed
-                                    ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"
-                            }`}>
-                              {record.executed_by_tx}
-                            </span>
+                            {record.executed ? (
+                              <a
+                                href={formatExecutedLink(record)}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 hover:underline"
+                              >
+                                Done
+                              </a>
+                            ) : (
+                              <button
+                                onClick={() => refreshTransactionStatus(record)}
+                                className="px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 hover:bg-yellow-200 transition-colors"
+                              >
+                                  <RefreshCw />
+                              </button>
+                            )}
                                                 </td>
                                             </tr>
                                         ))}
